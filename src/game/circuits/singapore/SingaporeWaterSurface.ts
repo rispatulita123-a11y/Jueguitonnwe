@@ -165,17 +165,20 @@ const WATER_VERTEX_SHADER = /* glsl */`
     float s1=sin(p1), s2=sin(p2), s3=sin(p3), s4=sin(p4), s5=sin(p5), s6=sin(p6), s7=sin(p7), s8=sin(p8), s9=sin(p9), s10=sin(p10);
     float c1=cos(p1), c2=cos(p2), c3=cos(p3), c4=cos(p4), c5=cos(p5), c6=cos(p6), c7=cos(p7), c8=cos(p8), c9=cos(p9), c10=cos(p10);
 
-    float h = 0.59*s1 + 0.31*s2 + 0.165*s3 + 0.085*s4 + 0.033*s5 + 0.055*s6 + 0.024*s7 + 0.045*s8 + 0.023*s9 + 0.016*s10;
-    displacedPosition.z = h * uWaveStrength;
+    // Natural Singapore Marina Bay tidal swell: Scaled to 0.08 and clamped to max +0.06m
+    // Ensures water surface (base Y = -0.65m) stays permanently 0.59m+ below track asphalt (Y = +0.02m)
+    float rawH = 0.59*s1 + 0.31*s2 + 0.165*s3 + 0.085*s4 + 0.033*s5 + 0.055*s6 + 0.024*s7 + 0.045*s8 + 0.023*s9 + 0.016*s10;
+    float h = rawH * 0.08;
+    displacedPosition.z = clamp(h * uWaveStrength, -0.15, 0.06);
 
-    // Gentle horizontal drift keeps wave crests rounded and physically based
-    float horizontalX = 0.22 * (0.59 * 0.915 * c1 + 0.31 * (-0.377) * c2 + 0.165 * 0.808 * c3 + 0.085 * (-0.771) * c4 + 0.033 * 0.796 * c5 + 0.055 * (-0.435) * c6 + 0.024 * 0.988 * c7 + 0.045 * (-0.613) * c8 + 0.023 * 0.892 * c9 + 0.016 * (-0.773) * c10) * uWaveStrength;
-    float horizontalZ = 0.22 * (0.59 * 0.403 * c1 + 0.31 * 0.927 * c2 + 0.165 * (-0.588) * c3 + 0.085 * (-0.636) * c4 + 0.033 * (-0.605) * c5 + 0.055 * 0.900 * c6 + 0.024 * 0.156 * c7 + 0.045 * 0.790 * c8 + 0.023 * 0.452 * c9 + 0.016 * (-0.634) * c10) * uWaveStrength;
+    // Controlled horizontal swell drift
+    float horizontalX = 0.02 * (0.59 * 0.915 * c1 + 0.31 * (-0.377) * c2 + 0.165 * 0.808 * c3 + 0.085 * (-0.771) * c4 + 0.033 * 0.796 * c5 + 0.055 * (-0.435) * c6 + 0.024 * 0.988 * c7 + 0.045 * (-0.613) * c8 + 0.023 * 0.892 * c9 + 0.016 * (-0.773) * c10) * uWaveStrength;
+    float horizontalZ = 0.02 * (0.59 * 0.403 * c1 + 0.31 * 0.927 * c2 + 0.165 * (-0.588) * c3 + 0.085 * (-0.636) * c4 + 0.033 * (-0.605) * c5 + 0.055 * 0.900 * c6 + 0.024 * 0.156 * c7 + 0.045 * 0.790 * c8 + 0.023 * 0.452 * c9 + 0.016 * (-0.634) * c10) * uWaveStrength;
     displacedPosition.x += horizontalX;
     displacedPosition.y -= horizontalZ;
 
-    float dhdx = 0.59*c1*(0.050 + 0.022*warpZ_dx) + 0.31*c2*(-0.037 + 0.091*warpZ_dx) + 0.165*c3*(0.132 - 0.096*warpZ_dx) + 0.085*c4*(-0.172 - 0.142*warpZ_dx) + 0.033*c5*(0.27 - 0.205*warpZ_dx) + 0.055*c6*(-0.088 + 0.182*warpZ_dx) + 0.024*c7*(0.33 + 0.052*warpZ_dx) + 0.045*c8*(-0.214 + 0.276*warpZ_dx) + 0.023*c9*(0.342 + 0.173*warpZ_dx) + 0.016*c10*(-0.284 - 0.233*warpZ_dx);
-    float dhdz = 0.59*c1*(0.050*warpX_dz + 0.022*(1.0+warpZ_dz)) + 0.31*c2*(-0.037*warpX_dz + 0.091*(1.0+warpZ_dz)) + 0.165*c3*(0.132*warpX_dz - 0.096*(1.0+warpZ_dz)) + 0.085*c4*(-0.172*warpX_dz - 0.142*(1.0+warpZ_dz)) + 0.033*c5*(0.27*warpX_dz - 0.205*(1.0+warpZ_dz)) + 0.055*c6*(-0.088*warpX_dz + 0.182*(1.0+warpZ_dz)) + 0.024*c7*(0.33*warpX_dz + 0.052*(1.0+warpZ_dz)) + 0.045*c8*(-0.214*warpX_dz + 0.276*(1.0+warpZ_dz)) + 0.023*c9*(0.342*warpX_dz + 0.173*(1.0+warpZ_dz)) + 0.016*c10*(-0.284*warpX_dz - 0.233*(1.0+warpZ_dz));
+    float dhdx = 0.08 * (0.59*c1*(0.050 + 0.022*warpZ_dx) + 0.31*c2*(-0.037 + 0.091*warpZ_dx) + 0.165*c3*(0.132 - 0.096*warpZ_dx) + 0.085*c4*(-0.172 - 0.142*warpZ_dx) + 0.033*c5*(0.27 - 0.205*warpZ_dx) + 0.055*c6*(-0.088 + 0.182*warpZ_dx) + 0.024*c7*(0.33 + 0.052*warpZ_dx) + 0.045*c8*(-0.214 + 0.276*warpZ_dx) + 0.023*c9*(0.342 + 0.173*warpZ_dx) + 0.016*c10*(-0.284 - 0.233*warpZ_dx));
+    float dhdz = 0.08 * (0.59*c1*(0.050*warpX_dz + 0.022*(1.0+warpZ_dz)) + 0.31*c2*(-0.037*warpX_dz + 0.091*(1.0+warpZ_dz)) + 0.165*c3*(0.132*warpX_dz - 0.096*(1.0+warpZ_dz)) + 0.085*c4*(-0.172*warpX_dz - 0.142*(1.0+warpZ_dz)) + 0.033*c5*(0.27*warpX_dz - 0.205*(1.0+warpZ_dz)) + 0.055*c6*(-0.088*warpX_dz + 0.182*(1.0+warpZ_dz)) + 0.024*c7*(0.33*warpX_dz + 0.052*(1.0+warpZ_dz)) + 0.045*c8*(-0.214*warpX_dz + 0.276*(1.0+warpZ_dz)) + 0.023*c9*(0.342*warpX_dz + 0.173*(1.0+warpZ_dz)) + 0.016*c10*(-0.284*warpX_dz - 0.233*(1.0+warpZ_dz)));
     vWaveSlope = vec2(dhdx, dhdz) * uWaveStrength;
 
     worldPosition = modelMatrix * vec4(displacedPosition, 1.0);
@@ -190,6 +193,7 @@ const WATER_VERTEX_SHADER = /* glsl */`
 
 const WATER_FRAGMENT_SHADER = /* glsl */`
   uniform sampler2D mirrorSampler;
+  uniform sampler2D mirrorDepthSampler;
   uniform sampler2D normalSampler;
   uniform float alpha;
   uniform float time;
@@ -258,14 +262,23 @@ const WATER_FRAGMENT_SHADER = /* glsl */`
     // Soft clamp prevents unmapped HDR specular values from creating white block artifacts
     reflectionSample = min(reflectionSample, vec3(2.4));
 
+    // Depth-based Silhouette Isolation:
+    // mirrorDepth < 0.9995 detects building / landmark / bridge geometry.
+    // The user requested: "no tengan colores pero que se refleje solo la silueta y ganar fluidez"
+    // Buildings reflect exclusively as clean, elegant dark silhouettes without colored window noise.
+    float mirrorDepth = texture2D(mirrorDepthSampler, mirrorUV).r;
+    float isSilhouette = 1.0 - smoothstep(0.9985, 0.9998, mirrorDepth);
+    vec3 silhouetteTone = vec3(0.010, 0.018, 0.028);
+    vec3 cleanReflection = mix(reflectionSample, silhouetteTone, isSilhouette);
+
     // Fresnel reflectance with physical water IOR (~1.333)
     float theta = max(dot(eyeDirection, surfaceNormal), 0.0);
     float rf0 = 0.045;
     float reflectance = rf0 + (1.0 - rf0) * pow(clamp(1.0 - theta, 0.0, 1.0), 4.2);
 
-    // Balanced albedo mixing
+    // Balanced albedo mixing with clean silhouette reflection
     vec3 deepWater = sunColor * diffuseLight * 0.30 + scatter;
-    vec3 surfaceColor = mix(deepWater, reflectionSample, reflectance) + specularLight * reflectance;
+    vec3 surfaceColor = mix(deepWater, cleanReflection, reflectance) + specularLight * reflectance;
 
     // Dynamic crest foam dissipation along wave ridges
     float crestFoamNoise = texture2D(normalSampler, (worldPosition.xz + vec2(time * 1.15, -time * 0.78)) * 0.048).r;
@@ -293,8 +306,8 @@ const WATER_FRAGMENT_SHADER = /* glsl */`
  */
 export function createC3WaterSurface(_unusedSourceGeometry?: THREE.BufferGeometry): C3WaterSurface {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-  const reflectionResolution = isMobile ? 256 : 512;
-  const subdivisions = isMobile ? 128 : 160;
+  const reflectionResolution = isMobile ? 256 : 256;
+  const subdivisions = isMobile ? 48 : 64;
   const waterSize = 6500;
 
   const waterGeometry = new THREE.PlaneGeometry(waterSize, waterSize, subdivisions, subdivisions);
@@ -309,13 +322,18 @@ export function createC3WaterSurface(_unusedSourceGeometry?: THREE.BufferGeometr
 
   const settings = { ...DEFAULT_OCEAN_SETTINGS };
 
-  // HalfFloatType render target for linear HDR reflections
+  // Depth texture to identify building silhouettes from the sky at infinite depth
+  const depthTexture = new THREE.DepthTexture(reflectionResolution, reflectionResolution);
+  depthTexture.type = THREE.UnsignedShortType;
+
+  // HalfFloatType render target for linear HDR reflections with depth buffer
   const renderTarget = new THREE.WebGLRenderTarget(reflectionResolution, reflectionResolution, {
     type: THREE.HalfFloatType,
     minFilter: THREE.LinearFilter,
     magFilter: THREE.LinearFilter,
     generateMipmaps: false,
     colorSpace: THREE.NoColorSpace,
+    depthTexture: depthTexture,
   });
   renderTarget.texture.wrapS = THREE.ClampToEdgeWrapping;
   renderTarget.texture.wrapT = THREE.ClampToEdgeWrapping;
@@ -345,6 +363,7 @@ export function createC3WaterSurface(_unusedSourceGeometry?: THREE.BufferGeometr
     fragmentShader: WATER_FRAGMENT_SHADER,
     uniforms: {
       mirrorSampler: { value: renderTarget.texture },
+      mirrorDepthSampler: { value: depthTexture },
       normalSampler: { value: normalTexture },
       alpha: { value: 1.0 },
       time: { value: 0.0 },
@@ -364,7 +383,7 @@ export function createC3WaterSurface(_unusedSourceGeometry?: THREE.BufferGeometr
 
   const waterMesh = new THREE.Mesh(waterGeometry, material);
   waterMesh.rotation.x = -Math.PI / 2;
-  waterMesh.position.set(0, -0.45, 0);
+  waterMesh.position.set(0, -0.65, 0);
   waterMesh.frustumCulled = false;
 
   waterMesh.onBeforeRender = function (renderer, scene, camera) {
@@ -493,6 +512,7 @@ export function createC3WaterSurface(_unusedSourceGeometry?: THREE.BufferGeometr
       disposed = true;
       waterMesh.onBeforeRender = () => {};
       renderTarget.dispose();
+      depthTexture.dispose();
       normalTexture.dispose();
       waterGeometry.dispose();
       material.dispose();
