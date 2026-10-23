@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* Responsive Laps Overlay Backdrop */
+.laps-modal-backdrop {
+  background-image: url('/images/laps_bg_portrait.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-color: #07080c;
+}
+
+@media (orientation: landscape) {
+  .laps-modal-backdrop {
+    background-image: url('/images/laps_bg_landscape.jpg');
+    background-size: cover;
+    background-position: center center;
+  }
+}
+
+/* Responsive Difficulty Overlay Backdrop */
+.difficulty-modal-backdrop {
+  background-image: url('/images/difficulty_bg_portrait.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-color: #06080e;
+}
+
+@media (orientation: landscape) {
+  .difficulty-modal-backdrop {
+    background-image: url('/images/difficulty_bg_landscape.jpg');
+    background-size: cover;
+    background-position: center right;
+  }
+}
+
+/* Responsive Assists Overlay Backdrop */
+.assists-modal-backdrop {
+  background-image: url('/images/assists_bg_portrait.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-color: #080a10;
+}
+
+@media (orientation: landscape) {
+  .assists-modal-backdrop {
+    background-image: url('/images/assists_bg_landscape.jpg');
+    background-size: cover;
+    background-position: center right;
+  }
+}
